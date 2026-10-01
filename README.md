@@ -1,80 +1,72 @@
-# Customer Shopping Behavior & Revenue Analysis
+# Customer Shopping Behavior Analysis
 
-[![Power BI](https://img.shields.io/badge/Power_BI-F2C811?style=flat&logo=powerbi&logoColor=black)](https://powerbi.microsoft.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Power BI](https://img.shields.io/badge/Power_BI-F2C811?style=flat&logo=powerbi&logoColor=black)](https://powerbi.microsoft.com/)
 
-An end-to-end data analytics project exploring 3,900 customer transactions across demographic, purchase, and subscription dimensions to uncover revenue drivers, customer segments, and retention opportunities.
-
----
-
-## Dashboard Preview
+An analysis of 3,900 retail purchases: I cleaned the data in Python, loaded it
+into PostgreSQL, answered ten business questions in SQL, and built a Power BI
+dashboard on top.
 
 ![Customer Behavior Dashboard](dashboard/dashboard_preview.png)
 
----
+## What I did
 
-## Project Overview & Objectives
+1. Cleaned the data with pandas. The dataset has 3,900 purchase records and 18
+   columns (demographics, purchase amounts, discounts, ratings, shipping). 37
+   review ratings were missing, so I filled each one with the median rating
+   for its product category.
+2. Renamed the columns to snake_case and added two features: an age group
+   (four equal-sized bands, from Young Adult to Senior) and the purchase
+   frequency converted to days, so "Weekly" becomes 7 and "Quarterly" 90.
+3. Checked whether `discount_applied` and `promo_code_used` ever differ. They
+   don't, so I dropped one.
+4. Loaded the cleaned table into PostgreSQL with SQLAlchemy.
+5. Wrote ten SQL queries, one per question in
+   `sql/business_analysis_queries.sql`. They use CTEs, window functions
+   (`ROW_NUMBER`) and conditional aggregation: for example, the top three
+   products in each category, and customers split into New, Returning and
+   Loyal by their number of previous purchases.
+6. Built the Power BI dashboard, with KPI cards, category and sales charts,
+   and slicers for subscription status, gender, category and shipping type.
 
-* **Dataset:** 3,900 purchase records with 18 features (demographics, transaction values, discounts, ratings, shipping types).
-* **Objective:** Clean raw transactional data, engineer business features, answer core monetization questions using relational SQL queries, and present findings in an interactive Power BI dashboard.
+## What I found
 
----
+- Male shoppers account for 67.7% of revenue ($157.9K, against $75.2K for
+  female shoppers).
+- Only 27% of customers (1,053) have a subscription, and subscribers don't
+  spend more per order: $59.49 on average, against $59.87 for non-subscribers.
+- Clothing is the biggest category by both orders and revenue (over $100K),
+  followed by Accessories, Footwear and Outerwear.
+- About half of all Hat, Sneaker and Coat purchases (47–50%) were made with a
+  discount, which makes those the most price-sensitive products.
+- 3,116 customers fall into the Loyal segment.
 
-## Tech Stack & Workflow
+## What I'd do with it
 
-1. **Python (pandas):**
-   * Handled missing data by imputing category-specific median ratings into `Review Rating` (37 nulls).
-   * Standardized schema naming conventions to snake_case.
-   * Engineered features: binned `age_group` (Young Adult, Middle-aged, Adult, Senior) and cleaned frequency metrics.
-   * Conducted redundancy checks (verified `discount_applied` vs. `promo_code_used` and removed redundant attributes).
+- The subscription isn't increasing order size, so it needs a reason to buy
+  more: tiered perks or member-only products.
+- Most customers are already loyal, so retention is likely a better use of
+  budget than discounts aimed at new buyers.
+- Discounts are heaviest on a few product lines. I'd cut back there and save
+  promo codes for stock that isn't selling.
 
-2. **PostgreSQL (pgAdmin 4):**
-   * Loaded cleaned data via SQLAlchemy pipeline.
-   * Executed analytical SQL queries using CTEs, window functions (`ROW_NUMBER()` / `DENSE_RANK()`), and conditional aggregations across 10 business use cases:
-     * Revenue contribution by gender and age group.
-     * High-spending discount users ($>\$59.76$ average order value).
-     * Subscription vs. non-subscription spend behavior.
-     * Category-level top product rankings and discount dependency rates.
+## Running it
 
-3. **Power BI Desktop:**
-   * Designed a responsive UI with custom color-accented KPI cards, donut distributions, and synchronized category/sales bar charts.
-   * Built interactive multi-slicer filtering by Subscription Status, Gender, Category, and Shipping Type.
-
----
-
-## Key Insights
-
-* **Revenue Skew:** Male shoppers accounted for 67.7% of total revenue ($157.9K vs. $75.2K for female shoppers).
-* **Subscription Uptake:** Only 27% (1,053) of customers hold active subscriptions. Average order value remained virtually identical between subscribers ($59.49) and non-subscribers ($59.87), indicating subscriptions drive predictability rather than larger basket sizes.
-* **Top Revenue Categories:** Clothing dominated order volume and revenue (> $100K), followed by Accessories, Footwear, and Outerwear.
-* **Discount Vulnerability:** Over 47%–50% of purchases in categories like Hats, Sneakers, and Coats were transacted under discounts, highlighting product lines where price sensitivity is highest.
-
----
-
-## Actionable Business Recommendations
-
-1. **Subscription Restructuring:** Introduce tiered perks or member-exclusive merchandise to incentivize basket growth, as current subscribers spend the same per transaction as non-subscribers.
-2. **Targeted Loyalty Programs:** 3,116 customers fall into the "Loyal" cohort based on previous transactions; prioritizing retention automations here yields higher ROI than broad acquisition discounts.
-3. **Margin Protection:** Rationalize discount schedules on high-margin apparel and reserve promotional codes for clearing low-velocity inventory.
-
----
-
-## Running the Pipeline
-
-The script loads the cleaned data into a local PostgreSQL database named
-`customer_behavior`. The database password is read from an environment
-variable, so no credentials are stored in the code:
+The script loads the data into a local PostgreSQL database called
+`customer_behavior`. It reads the database password from an environment
+variable, so no credentials are in the code:
 
 ```bash
 export DB_PASSWORD="your-postgres-password"
 python notebooks/eda_and_data_cleaning.py
 ```
 
----
+## Files
 
-## Repository Contents
-
-* `notebooks/`: Jupyter Notebook containing data preprocessing, median imputation, and feature binning.
-* `sql/`: Clean `.sql` scripts detailing all 10 business problem queries.
-* `dashboard/`: The standalone `.pbix` Power BI file and high-resolution layout preview.
+```
+notebooks/   cleaning and feature engineering (notebook and script)
+sql/         the ten analysis queries
+data/        the cleaned dataset
+dashboard/   the Power BI file and a preview image
+```
